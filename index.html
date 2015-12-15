@@ -1,0 +1,510 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>New fireworks</title>
+    <style>
+        body{
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+
+
+</body>
+
+<script src="js/Three.js"></script>
+<script src="functions.js"></script>
+<script src="loadSprites.js"></script>
+
+<script type="text/javascript">
+<<<<<<< HEAD
+    
+
+
+
+
+
+    // set the scene size
+    var WIDTH = window.innerWidth,
+    HEIGHT = window.innerHeight;
+    ASPECT = WIDTH / HEIGHT;
+    
+    var textureLoader = new THREE.TextureLoader();
+    var mouseX, mouseY;
+    var date = Date.now();
+    var time = 0;
+
+    var particle, flare;
+    var particles = [];
+    var flares = [];
+    var particleGroup = new THREE.Object3D;;
+    var flareGroup = new THREE.Object3D;;
+    var inExplosion = false;
+    var particleCount = 50;
+    var flareCount =2000;
+    var pCount, fCount;
+    var flareToMove = 0;
+    var particleInitSpeed = 0.15;
+    var flareInitSpeed = 0.002;
+    var rocketInitSpeed = 0.05;
+    var gravity = -0.001;
+    var age;
+    var rocket;
+
+    // get the DOM element to attach to
+    // - assume we've got jQuery to hand
+    //Renderer
+            renderer = new THREE.WebGLRenderer({ antialiasing: true });
+            renderer.setClearColor ( 0xB3EAFF, 1 );
+            renderer.setClearColor ( 0x222222, 1 );
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            document.body.appendChild( renderer.domElement );
+
+            //Scene
+            scene = new THREE.Scene();
+    var sceneGraph = new THREE.Object3D();
+    sceneGraph.add(particleGroup);
+    sceneGraph.add(flareGroup);
+    scene.add(sceneGraph);
+    
+    camera = new THREE.PerspectiveCamera( 60, window.innerWidth/window.innerHeight, 0.1, 10000 );
+            camera.position.z = 15;
+            scene.add(camera);
+    
+ 
+    loadParticles();
+    loadFlares();
+    loadRocket();
+
+
+
+
+
+
+    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    window.addEventListener( 'resize', onWindowResize, false );
+    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+    function onDocumentMouseMove( event ) {
+
+        mouseX = (event.clientX - window.innerWidth/2)/window.innerWidth;
+        mouseY = (event.clientY - window.innerHeight/2)/window.innerHeight;
+    }
+
+
+    function onDocumentMouseDown( event ) {
+
+        flareToMove = 0;
+        date = Date.now();
+        inExplosion = false;
+
+        fCount = flareCount;
+        while(fCount--){
+
+            flare = flares[fCount];
+            flare.sprite.material.opacity = 0;
+        }  
+       
+        rocket.sprite.material.opacity = 1;
+
+        rocket.sprite.position.x = 0;
+        rocket.sprite.position.y = 0;
+        rocket.sprite.position.z = 0;
+
+
+        rocket.velocity.x = (Math.random()-0.5)*rocketInitSpeed;
+        rocket.velocity.y = (Math.random())*rocketInitSpeed +0.07; 
+        rocket.velocity.z = (Math.random()-0.5)*rocketInitSpeed; 
+
+    }
+
+    function onWindowResize( e ) {
+        WIDTH = window.innerWidth, HEIGHT = window.innerHeight;
+        camera.aspect = window.innerWidth / window.innerHeight;
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+    }
+
+
+    // animation loop
+    date = Date.now();
+    animate();
+
+    function animate() {
+        time = (Date.now()-date)/1000;
+        //console.log(time); 
+        scene.updateMatrixWorld();
+
+        updateRocketPosition();
+        updateSpritePositions();
+        
+        if(time > 2 && !inExplosion){
+
+            initExplosion(rocket.sprite.position.x,rocket.sprite.position.y,rocket.sprite.position.z);
+            rocket.sprite.material.opacity = 0;
+            inExplosion = true;
+        }
+
+
+
+        sceneGraph.rotation.y = mouseX + time/20;
+
+        requestAnimationFrame( animate );
+        renderer.render( scene, camera );
+    }
+
+    function updateRocketPosition(){
+        
+
+        rocket.velocity.y -= 0.001;
+        rocket.sprite.position.x += rocket.velocity.x;  
+        rocket.sprite.position.y += rocket.velocity.y;  
+        rocket.sprite.position.z += rocket.velocity.z;  
+    }
+
+    function updateSpritePositions(){
+
+
+        if(inExplosion){
+            pCount = particleCount;
+
+            while(pCount--){
+
+
+
+
+
+                if(time < 3){
+                    //=================== PARTICLES =========================
+                    // initialize particle
+                    particle = particles[pCount];
+                    particle.sprite.material.opacity = 0;
+                    // give speed to position
+                    particle.velocity.y -= 0.0002; //Gravity
+
+                    particle.velocity.x *= 0.98;
+                    particle.velocity.y *= 0.98;
+                    particle.velocity.z *= 0.98;
+
+                    particle.sprite.position.x += particle.velocity.x;
+                    particle.sprite.position.y += particle.velocity.y;
+                    particle.sprite.position.z += particle.velocity.z;
+
+
+
+
+                    //=================== FLARES =========================
+                
+                    flare = flares[flareToMove];
+                    flare.age = (flareCount/particleCount);
+                    flare.velocity.x = (Math.random()-0.5)*flareInitSpeed;
+                    flare.velocity.y = (Math.random()-0.5)*flareInitSpeed - 0.001; //Gravity 
+                    flare.velocity.z = (Math.random()-0.5)*flareInitSpeed; 
+
+                    flare.sprite.position.x = particle.sprite.position.x;
+                    flare.sprite.position.y = particle.sprite.position.y;
+                    flare.sprite.position.z = particle.sprite.position.z;
+                    flare.sprite.material.opacity = 1.0/(time*10);
+                }
+
+
+
+                if(flareToMove < flareCount-1)
+                    flareToMove++;
+                else
+                    flareToMove = 0;
+
+            }   
+
+
+            fCount = flareCount;
+
+            while(fCount--){
+
+                flare = flares[fCount];
+                flare.age--;
+                flare.sprite.material.opacity = flare.age/(flareCount/particleCount) / time/2;
+
+              // console.log(flare.age);
+                flare.sprite.position.x += flare.velocity.x;
+                flare.sprite.position.y += flare.velocity.y;
+                flare.sprite.position.z += flare.velocity.z;
+  
+  
+
+                flare.sprite.position.y += flare.velocity.y;
+
+               // flare.sprite.position.y += gravity;
+              
+            }  
+        }
+    }
+
+
+
+   
+
+
+
+
+=======
+	
+	// @see http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+	window.requestAnimFrame = (function(){
+		return  window.requestAnimationFrame       || 
+		window.webkitRequestAnimationFrame || 
+		window.mozRequestAnimationFrame    || 
+		window.oRequestAnimationFrame      || 
+		window.msRequestAnimationFrame     || 
+		function(/* function */ callback, /* DOMElement */ element){
+			window.setTimeout(callback, 1000 / 60);
+		};
+	})();
+	// set the scene size
+	var WIDTH = window.innerWidth,
+	HEIGHT = window.innerHeight;
+	
+	// set some camera attributes
+	var VIEW_ANGLE = 90,
+	ASPECT = WIDTH / HEIGHT,
+	NEAR = 0.1,
+	FAR = 10000;
+
+	var particleSystem;
+	var particle;
+	var particleCount = 100;
+	var is_explosion = false;
+
+	var flares = [];
+	var fcount = 0; 
+	var flareVelocity = 0.10;
+	
+
+	// get the DOM element to attach to
+	// - assume we've got jQuery to hand
+	var $container = $('#container');
+	
+	// create a WebGL renderer, camera
+	// and a scene
+	var renderer = new THREE.WebGLRenderer();
+	var camera = new THREE.Camera(  VIEW_ANGLE,
+		ASPECT,
+		NEAR,
+		FAR  );
+	var scene = new THREE.Scene();
+	
+	camera.position.z = 300;
+	renderer.setClearColor(new THREE.Color(0, 1));
+	renderer.setSize(WIDTH, HEIGHT);
+	$container.append(renderer.domElement);
+	
+	initParticle();
+	spawnParticles();
+
+	document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+	window.addEventListener( 'resize', onWindowResize, false );
+
+
+	function onDocumentMouseDown( event ) {
+
+		mouseX = (event.clientX);
+		mouseY = (event.clientY);
+		console.log(mouseX);
+		initExplosion();
+
+		
+		console.log(fcount);
+	}
+
+	function onWindowResize( e ) {
+		WIDTH = window.innerWidth, HEIGHT = window.innerHeight;
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+	}
+
+
+	
+	// animation loop
+	function update() {
+		
+		if(is_explosion){
+			pCount = particleCount;
+			while(pCount--){
+				particle = particles.vertices[pCount];
+				particle.velocity.y -= Math.random() * .01;
+
+				particle.position.addSelf(
+				particle.velocity);
+			}
+
+			initFlare();
+			spawnFlares();
+		}
+
+
+		if(true){
+			pCount = particleCount;
+			while(pCount--){
+				for(var c = 0; c < fcount; c++){
+					flare = flares[c].vertices[pCount];
+					flare.velocity.y -= Math.random() * .01;
+
+					flare.position.addSelf(
+					flare.velocity);
+				}
+				
+
+			}
+		}
+
+
+
+		//particleSystem.geometry.__dirtyVertices = true;
+		renderer.render(scene, camera);
+
+		requestAnimFrame(update);
+	}
+
+
+
+
+
+	function initParticle(){
+
+		particles = new THREE.Geometry(),
+		pMaterial = new THREE.ParticleBasicMaterial({
+			color: 0xFFFFFF,
+			size: 10,
+			map: THREE.ImageUtils.loadTexture(
+				"images/particle.png"
+				),
+			blending: THREE.AdditiveBlending,
+			transparent: true,
+			opacity: 0.0
+		});
+
+		for(var p = 0; p < particleCount; p++) {
+
+			particle = new THREE.Vertex(
+				new THREE.Vector3(0, 0, 0)
+				);
+
+			particle.velocity = new THREE.Vector3(0,0,0);
+			particles.vertices.push(particle);
+		}
+	}
+
+	function initFlare(){
+
+		
+
+		flares[fcount] = new THREE.Geometry(),
+		pMaterial = new THREE.ParticleBasicMaterial({
+			color: 0xFFFFFF,
+			size: 10,
+			map: THREE.ImageUtils.loadTexture(
+				"images/particle.png"
+				),
+			blending: THREE.AdditiveBlending,
+			transparent: true,
+			opacity: 0.1,
+			depthTest: false
+
+		});
+		
+		// now create the individual particles
+		pCount = particleCount;
+		
+		while(pCount--){
+			particle = particles.vertices[pCount];
+
+			var pX = particle.position.x,
+			pY = particle.position.y,
+			pZ = particle.position.z,
+			flare = new THREE.Vertex(
+				new THREE.Vector3(pX, pY, pZ)
+				);
+			// create a velocity vector
+
+			flare.velocity = new THREE.Vector3(
+			(Math.random() - 0.5)*flareVelocity,
+			(Math.random() - 0.5)*flareVelocity,
+			(Math.random() - 0.5)*flareVelocity);
+
+			var gainFlare = 0.1;
+			flare.velocity.x += particle.velocity.x*gainFlare;
+			flare.velocity.y += particle.velocity.y*gainFlare;
+			flare.velocity.z += particle.velocity.z*gainFlare;
+			//flare.velocity.addSelf(particle.velocity);
+
+			// add it to the geometry
+			flares[fcount].vertices.push(flare);
+
+		}
+
+
+			
+		
+	}
+
+	function spawnParticles(){
+
+		var particleSystem = new THREE.ParticleSystem(
+			particles,
+			pMaterial);
+
+		particleSystem.sortParticles = true;
+		scene.addChild(particleSystem);
+	}
+
+	function initExplosion(){
+
+		is_explosion = true;
+		xPos = (Math.random() - 0.5)*200;
+		yPos = (Math.random() - 0.5)*200;
+
+		for(var p = 0; p < particleCount; p++) {
+			particle = particles.vertices[p];
+
+			particle.position.x = xPos;
+			particle.position.y = yPos;
+			particle.position.z = 0;
+
+			var particleVelocity = 2;
+			particle.velocity = new THREE.Vector3(
+			(Math.random() - 0.5)*particleVelocity,
+			(Math.random() - 0.5)*particleVelocity,
+			(Math.random() - 0.5)*particleVelocity);
+
+		}	
+	}
+
+	function spawnFlares(){
+
+		
+		
+		// create the particle system
+		var flareSystem = new THREE.ParticleSystem(
+			flares[fcount],
+			pMaterial);
+		
+		flareSystem.sortParticles = true;
+		
+		// add it to the scene
+		scene.addChild(flareSystem);
+
+		fcount+=1;
+
+	}
+
+
+requestAnimFrame(update);
+>>>>>>> origin/master
+</script>
+</html>
